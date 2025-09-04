@@ -6,6 +6,7 @@ import com.ai.attendance_check.user_service.mapper.UserMapper;
 import com.ai.attendance_check.user_service.model.User;
 import com.ai.attendance_check.user_service.model.UserRole;
 import com.ai.attendance_check.user_service.repository.UserRepository;
+import com.ai.attendance_check.user_service.service.KeycloakService;
 import com.ai.attendance_check.user_service.service.UserService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -17,6 +18,7 @@ import java.util.List;
 public class UserServiceImpl implements UserService {
 
     private final UserRepository userRepository;
+    private final KeycloakService keycloakService;
 
     @Override
     public UserResponseDto createNewUser(UserRequestDto request) {
@@ -28,8 +30,12 @@ public class UserServiceImpl implements UserService {
             return UserMapper.mapToDto(existingUser);
         }
 
+        //create in keycloak first
+        String keycloakId = keycloakService.createKeycloakUser(request);
+
         //create new user
         User newUser = User.builder()
+                .keycloakId(keycloakId)
                 .email(request.getEmail())
                 .firstName(request.getFirstName())
                 .lastName(request.getLastName())

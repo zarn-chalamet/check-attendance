@@ -1,0 +1,2 @@
+# Ignore MySQL runtime data
+api-gateway/volume-data/
