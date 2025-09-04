@@ -2,6 +2,7 @@ package com.ai.attendance_check.user_service.service.impl;
 
 import com.ai.attendance_check.user_service.dto.request.UserRequestDto;
 import com.ai.attendance_check.user_service.dto.response.UserResponseDto;
+import com.ai.attendance_check.user_service.exception.UserNotFoundException;
 import com.ai.attendance_check.user_service.mapper.UserMapper;
 import com.ai.attendance_check.user_service.model.User;
 import com.ai.attendance_check.user_service.model.UserRole;
@@ -10,6 +11,7 @@ import com.ai.attendance_check.user_service.service.KeycloakService;
 import com.ai.attendance_check.user_service.service.UserService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
@@ -48,31 +50,71 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public List<UserResponseDto> getUserListByRole(UserRole role) {
-        return List.of();
+
+        List<User> userList = userRepository.findAllByRole(role);
+        System.out.println(userList);
+
+        return userList.stream().map(UserMapper::mapToDto).toList();
     }
 
     @Override
     public UserResponseDto getCurrentUserData(String keycloakId) {
-        return null;
+
+        User user = userRepository.findByKeycloakId(keycloakId)
+                .orElseThrow(() -> new UserNotFoundException("User not found with provided keycloakId."));
+
+        return UserMapper.mapToDto(user);
     }
 
     @Override
     public UserResponseDto getUserByKeycloakId(String keycloakId) {
-        return null;
+
+        User user = userRepository.findByKeycloakId(keycloakId)
+                .orElseThrow(() -> new UserNotFoundException("User not found with provided keycloakId."));
+
+        return UserMapper.mapToDto(user);
     }
 
     @Override
     public UserResponseDto updateUserByKeycloakId(String keycloakId, UserRequestDto dto) {
-        return null;
+
+        User user = userRepository.findByKeycloakId(keycloakId)
+                .orElseThrow(() -> new UserNotFoundException("User not found with provided keycloakId."));
+
+        //update user from keycloak
+        keycloakService.updateUser(keycloakId, dto);
+
+        //update user in database
+        user.setEmail(dto.getEmail());
+        user.setFirstName(dto.getFirstName());
+        user.setLastName(dto.getLastName());
+        user.setRole(dto.getRole());
+        User updatedUser = userRepository.save(user);
+
+        return UserMapper.mapToDto(updatedUser);
     }
 
     @Override
+    @Transactional
     public void deleteUserByKeycloakId(String keycloakId) {
+
+        boolean userExist = userRepository.existsByKeycloakId(keycloakId);
+
+        System.out.println("---------------------------------------------");
+        System.out.println(userExist);
+
+        if(userExist) {
+            //delete in keycloak first
+            keycloakService.deleteUser(keycloakId);
+
+            //delete in database
+            userRepository.deleteByKeycloakId(keycloakId);
+        }
 
     }
 
     @Override
     public Boolean validateUserByKeycloakId(String keycloakId) {
-        return null;
+        return userRepository.existsByKeycloakId(keycloakId);
     }
 }

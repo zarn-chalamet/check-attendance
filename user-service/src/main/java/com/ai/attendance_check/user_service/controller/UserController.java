@@ -25,7 +25,7 @@ public class UserController {
         return ResponseEntity.status(HttpStatus.CREATED).body(userService.createNewUser(dto));
     }
 
-    // Get users by role
+    // Get users by role (only admin)
     @GetMapping("/role/{role}")
     public ResponseEntity<List<UserResponseDto>> getUsersByRole(@PathVariable("role") UserRole role) {
 
@@ -46,7 +46,7 @@ public class UserController {
         return ResponseEntity.ok(userService.getUserByKeycloakId(keycloakId));
     }
 
-    // Update user
+    // Update user (only admin)
     @PutMapping("/{keycloakId}")
     public ResponseEntity<UserResponseDto> updateUser(@PathVariable String keycloakId,
                                                       @RequestBody UserRequestDto dto) {
@@ -54,12 +54,12 @@ public class UserController {
         return ResponseEntity.ok(userService.updateUserByKeycloakId(keycloakId, dto));
     }
 
-    // Delete user
+    // Delete user (only admin)
     @DeleteMapping("/{keycloakId}")
-    public ResponseEntity<Void> deleteUser(@PathVariable String keycloakId) {
+    public ResponseEntity<?> deleteUser(@PathVariable String keycloakId) {
         userService.deleteUserByKeycloakId(keycloakId);
 
-        return ResponseEntity.noContent().build();
+        return ResponseEntity.ok("User deleted successfully.");
     }
 
     // Validate user
