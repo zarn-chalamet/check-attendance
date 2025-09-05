@@ -1,11 +1,9 @@
-package com.ai.attendance_check.attendance_service.model;
+package com.ai.attendance_check.attendance_service.dto.response;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import org.springframework.data.annotation.Id;
-import org.springframework.data.mongodb.core.mapping.Document;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -14,10 +12,7 @@ import java.util.List;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-@Document(collection = "attendance_sessions")
-public class AttendanceSession {
-
-    @Id
+public class AttendanceResponseDto {
     private String id;
 
     private String courseId;
@@ -28,14 +23,14 @@ public class AttendanceSession {
 
     private boolean active;
 
-    private List<AttendanceRecord> records;
+    private List<AttendanceRecordDto> records;
 
 
     @Data
     @Builder
     @NoArgsConstructor
     @AllArgsConstructor
-    public static class AttendanceRecord {
+    public static class AttendanceRecordDto {
         private String studentId; //keycloak Id
         private LocalDateTime checkIn; // checked in time
         private boolean present; // True if within cutoff, false if absent
