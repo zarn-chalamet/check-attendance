@@ -8,13 +8,8 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 @RestControllerAdvice
 public class GlobalExceptionHandler {
 
-    @ExceptionHandler(CourseAlreadyRegisteredException.class)
-    public ProblemDetail handleCourseAlreadyRegisteredException(CourseAlreadyRegisteredException e) {
-        return ProblemDetail.forStatusAndDetail(HttpStatus.BAD_REQUEST, e.getMessage());
-    }
-
-    @ExceptionHandler(CourseNotFoundException.class)
-    public ProblemDetail handleCourseNotFoundException(CourseNotFoundException e) {
+    @ExceptionHandler(AttendanceSessionNotFoundException.class)
+    public ProblemDetail handleAttendanceSessionNotFoundException(AttendanceSessionNotFoundException e) {
         return ProblemDetail.forStatusAndDetail(HttpStatus.BAD_REQUEST, e.getMessage());
     }
 }
