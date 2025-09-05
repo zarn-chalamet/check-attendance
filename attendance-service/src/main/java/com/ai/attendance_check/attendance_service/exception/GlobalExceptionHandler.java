@@ -12,4 +12,14 @@ public class GlobalExceptionHandler {
     public ProblemDetail handleAttendanceSessionNotFoundException(AttendanceSessionNotFoundException e) {
         return ProblemDetail.forStatusAndDetail(HttpStatus.BAD_REQUEST, e.getMessage());
     }
+
+    @ExceptionHandler(StudentAlreadyCheckInException.class)
+    public ProblemDetail handleStudentAlreadyCheckInException(StudentAlreadyCheckInException e) {
+        return ProblemDetail.forStatusAndDetail(HttpStatus.BAD_REQUEST, e.getMessage());
+    }
+
+    @ExceptionHandler(SessionAlreadyClosedException.class)
+    public ProblemDetail handleSessionAlreadyClosedException(SessionAlreadyClosedException e) {
+        return ProblemDetail.forStatusAndDetail(HttpStatus.BAD_REQUEST, e.getMessage());
+    }
 }
