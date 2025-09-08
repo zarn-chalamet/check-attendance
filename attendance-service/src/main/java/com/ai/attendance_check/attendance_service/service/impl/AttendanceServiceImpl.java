@@ -1,6 +1,7 @@
 package com.ai.attendance_check.attendance_service.service.impl;
 
 import com.ai.attendance_check.attendance_service.course.CourseResponseDto;
+import com.ai.attendance_check.attendance_service.dto.AttendanceWarningMessage;
 import com.ai.attendance_check.attendance_service.dto.CourseAttendanceReportDto;
 import com.ai.attendance_check.attendance_service.dto.StudentAttendanceReportDto;
 import com.ai.attendance_check.attendance_service.dto.request.AttendanceRequestDto;
@@ -12,6 +13,7 @@ import com.ai.attendance_check.attendance_service.mapper.AttendanceMapper;
 import com.ai.attendance_check.attendance_service.model.AttendanceSession;
 import com.ai.attendance_check.attendance_service.repository.AttendanceSessionRepository;
 import com.ai.attendance_check.attendance_service.service.AttendanceService;
+import com.ai.attendance_check.attendance_service.service.RabbitMqService;
 import com.ai.attendance_check.attendance_service.user.UserResponseDto;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -33,12 +35,15 @@ public class AttendanceServiceImpl implements AttendanceService {
 
     private final WebClient courseWebClient;
 
+    private final RabbitMqService rabbitMqService;
+
     public AttendanceServiceImpl(AttendanceSessionRepository attendanceSessionRepository,
                                  @Qualifier("userServiceWebClient") WebClient userWebClient,
-                                 @Qualifier("courseServiceWebClient") WebClient courseWebClient) {
+                                 @Qualifier("courseServiceWebClient") WebClient courseWebClient, RabbitMqService rabbitMqService) {
         this.attendanceSessionRepository = attendanceSessionRepository;
         this.userWebClient = userWebClient;
         this.courseWebClient = courseWebClient;
+        this.rabbitMqService = rabbitMqService;
     }
 
     @Override
@@ -191,7 +196,7 @@ public class AttendanceServiceImpl implements AttendanceService {
                 .toList();
 
         // Build report
-        return StudentAttendanceReportDto.builder()
+        StudentAttendanceReportDto report = StudentAttendanceReportDto.builder()
                 .courseId(courseId)
                 .studentId(studentId)
                 .studentName(user.getFirstName() + " " + user.getLastName())
@@ -202,6 +207,22 @@ public class AttendanceServiceImpl implements AttendanceService {
                 .attendanceRate(totalSessions == 0 ? 0 : (attendedSessions * 100.0 / totalSessions))
                 .sessionRecords(sessionRecords)
                 .build();
+
+        // send warning if attendance is below 75%
+        if (totalSessions > 4 && report.getAttendanceRate() < 75.0) {
+            AttendanceWarningMessage message = AttendanceWarningMessage.builder()
+                    .courseId(courseId)
+                    .courseTitle(course.getTitle())
+                    .studentId(studentId)
+                    .studentName(report.getStudentName())
+                    .email(report.getEmail())
+                    .attendanceRate(report.getAttendanceRate())
+                    .build();
+
+            rabbitMqService.publishWarningMessageToRabbitMq(message);
+        }
+
+        return report;
     }
 
     @Override
