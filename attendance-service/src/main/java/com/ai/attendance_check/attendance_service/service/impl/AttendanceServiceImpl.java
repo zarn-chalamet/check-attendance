@@ -209,7 +209,7 @@ public class AttendanceServiceImpl implements AttendanceService {
                 .build();
 
         // send warning if attendance is below 75%
-        if (totalSessions > 4 && report.getAttendanceRate() < 75.0) {
+        if (totalSessions > 1 && report.getAttendanceRate() < 75.0) {
             AttendanceWarningMessage message = AttendanceWarningMessage.builder()
                     .courseId(courseId)
                     .courseTitle(course.getTitle())

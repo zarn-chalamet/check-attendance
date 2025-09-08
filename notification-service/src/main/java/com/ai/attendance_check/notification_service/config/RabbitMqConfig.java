@@ -36,7 +36,8 @@ public class RabbitMqConfig {
     @Bean
     public Binding warningEmailBinding(Queue warningEmailQueue,
                                        DirectExchange warningEmailExchange) {
-        return BindingBuilder.bind(warningEmailQueue)
+        return BindingBuilder
+                .bind(warningEmailQueue)
                 .to(warningEmailExchange)
                 .with(routingKye);
     }
