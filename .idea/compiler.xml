@@ -3,7 +3,7 @@
   <component name="CompilerConfiguration">
     <annotationProcessing>
       <profile default="true" name="Default" enabled="true" />
-      <profile name="Annotation profile for attendance-service" enabled="true">
+      <profile name="Annotation profile for notification-service" enabled="true">
         <sourceOutputDir name="target/generated-sources/annotations" />
         <sourceTestOutputDir name="target/generated-test-sources/test-annotations" />
         <outputRelativeToContentRoot value="true" />
@@ -13,6 +13,7 @@
         <module name="course-service" />
         <module name="api-gateway" />
         <module name="user-service" />
+        <module name="notification-service" />
         <module name="attendance-service" />
       </profile>
     </annotationProcessing>
@@ -22,6 +23,7 @@
       <module name="api-gateway" options="-parameters" />
       <module name="attendance-service" options="-parameters" />
       <module name="course-service" options="-parameters" />
+      <module name="notification-service" options="-parameters" />
       <module name="user-service" options="-parameters" />
     </option>
   </component>
