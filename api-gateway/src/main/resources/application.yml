@@ -1,0 +1,30 @@
+spring:
+  application:
+    name: api-gateway
+
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          issuer-uri: http://localhost:8181/realms/attendance-checkin
+
+  cloud:
+    gateway:
+      server:
+        webflux:
+          routes:
+            - id: attendance
+              uri: http://localhost:8083
+              predicates:
+                - Path=/api/attendance/**
+            - id: user
+              uri: http://localhost:8081
+              predicates:
+                - Path=/api/users/**
+            - id: course
+              uri: http://localhost:8082
+              predicates:
+                - Path=/api/courses/**
+
+server:
+  port: 8080
