@@ -8,6 +8,7 @@ import com.ai.attendance_check.attendance_service.service.AttendanceService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 
@@ -30,9 +31,9 @@ public class AttendanceController {
     //check in (by student)
     @PostMapping("/{sessionId}/check-in")
     public ResponseEntity<AttendanceResponseDto> checkIn(@PathVariable String sessionId,
-                                                         @RequestParam("studentId") String studentId) {
+                                                         @RequestParam("file") MultipartFile file) {
 
-        AttendanceResponseDto attendanceSession = attendanceService.markAttendance(sessionId,studentId);
+        AttendanceResponseDto attendanceSession = attendanceService.markAttendance(sessionId,file);
 
         return ResponseEntity.ok(attendanceSession);
     }

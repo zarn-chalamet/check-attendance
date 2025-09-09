@@ -3,6 +3,7 @@ package com.ai.attendance_check.attendance_service.service.impl;
 import com.ai.attendance_check.attendance_service.course.CourseResponseDto;
 import com.ai.attendance_check.attendance_service.dto.AttendanceWarningMessage;
 import com.ai.attendance_check.attendance_service.dto.CourseAttendanceReportDto;
+import com.ai.attendance_check.attendance_service.dto.FaceRecognitionResponse;
 import com.ai.attendance_check.attendance_service.dto.StudentAttendanceReportDto;
 import com.ai.attendance_check.attendance_service.dto.request.AttendanceRequestDto;
 import com.ai.attendance_check.attendance_service.dto.response.AttendanceResponseDto;
@@ -13,11 +14,13 @@ import com.ai.attendance_check.attendance_service.mapper.AttendanceMapper;
 import com.ai.attendance_check.attendance_service.model.AttendanceSession;
 import com.ai.attendance_check.attendance_service.repository.AttendanceSessionRepository;
 import com.ai.attendance_check.attendance_service.service.AttendanceService;
+import com.ai.attendance_check.attendance_service.service.FaceRecognitionClient;
 import com.ai.attendance_check.attendance_service.service.RabbitMqService;
 import com.ai.attendance_check.attendance_service.user.UserResponseDto;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.reactive.function.client.WebClient;
 
 import java.time.LocalDateTime;
@@ -37,13 +40,16 @@ public class AttendanceServiceImpl implements AttendanceService {
 
     private final RabbitMqService rabbitMqService;
 
+    private final FaceRecognitionClient faceRecognitionClient;
+
     public AttendanceServiceImpl(AttendanceSessionRepository attendanceSessionRepository,
                                  @Qualifier("userServiceWebClient") WebClient userWebClient,
-                                 @Qualifier("courseServiceWebClient") WebClient courseWebClient, RabbitMqService rabbitMqService) {
+                                 @Qualifier("courseServiceWebClient") WebClient courseWebClient, RabbitMqService rabbitMqService, FaceRecognitionClient faceRecognitionClient) {
         this.attendanceSessionRepository = attendanceSessionRepository;
         this.userWebClient = userWebClient;
         this.courseWebClient = courseWebClient;
         this.rabbitMqService = rabbitMqService;
+        this.faceRecognitionClient = faceRecognitionClient;
     }
 
     @Override
@@ -66,7 +72,9 @@ public class AttendanceServiceImpl implements AttendanceService {
     }
 
     @Override
-    public AttendanceResponseDto markAttendance(String sessionId, String studentId) {
+    public AttendanceResponseDto markAttendance(String sessionId,
+                                                MultipartFile file) {
+
         // get session by id
         AttendanceSession session = attendanceSessionRepository.findById(sessionId)
                 .orElseThrow(() -> new AttendanceSessionNotFoundException(
@@ -77,13 +85,20 @@ public class AttendanceServiceImpl implements AttendanceService {
             throw new RuntimeException("Session already closed");
         }
 
+        // Call Python Face Recognition API and get user id;
+        FaceRecognitionResponse response = faceRecognitionClient.recognizeFace(file);
+
+        if(response.getUser_id() == null) {
+            throw new RuntimeException("Face not recognized. Please try again.");
+        }
+
         // check already checked in
         boolean isAlreadyCheckIn = session.getRecords() != null &&
-                session.getRecords().stream().anyMatch(r -> r.getStudentId().equals(studentId));
+                session.getRecords().stream().anyMatch(r -> r.getStudentId().equals(response.getUser_id()));
 
         if (isAlreadyCheckIn) {
             throw new StudentAlreadyCheckInException(
-                    "Student with this id already checked in: " + studentId);
+                    "Student with this id already checked in: " + response.getUser_id());
         }
 
         // session logic
@@ -104,7 +119,7 @@ public class AttendanceServiceImpl implements AttendanceService {
         // set attendance record
         AttendanceSession.AttendanceRecord record = AttendanceSession.AttendanceRecord
                 .builder()
-                .studentId(studentId)
+                .studentId(response.getUser_id())
                 .checkIn(now)
                 .present(present)
                 .late(late)

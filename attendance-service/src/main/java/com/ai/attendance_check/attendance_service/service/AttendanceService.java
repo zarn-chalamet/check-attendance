@@ -4,13 +4,14 @@ import com.ai.attendance_check.attendance_service.dto.CourseAttendanceReportDto;
 import com.ai.attendance_check.attendance_service.dto.StudentAttendanceReportDto;
 import com.ai.attendance_check.attendance_service.dto.request.AttendanceRequestDto;
 import com.ai.attendance_check.attendance_service.dto.response.AttendanceResponseDto;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 
 public interface AttendanceService {
     AttendanceResponseDto startAttendanceSession(AttendanceRequestDto requestDto);
 
-    AttendanceResponseDto markAttendance(String sessionId, String studentId);
+    AttendanceResponseDto markAttendance(String sessionId, MultipartFile file);
 
     AttendanceResponseDto closeSession(String sessionId);
 

@@ -25,7 +25,6 @@ public class AttendanceResponseDto {
 
     private List<AttendanceRecordDto> records;
 
-
     @Data
     @Builder
     @NoArgsConstructor

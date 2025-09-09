@@ -21,4 +21,12 @@ public class WebClientConfig {
         return builder.baseUrl("http://localhost:8082") // Course Service URL
                 .build();
     }
+
+    @Bean
+    @Qualifier("faceRecognitionWebClient")
+    public WebClient faceRecognitionWebClient(WebClient.Builder builder) {
+        return builder.baseUrl("http://localhost:8000") // Course Service URL
+                .build();
+    }
+
 }
